@@ -1,9 +1,10 @@
 # Note: I'm lazy so some user convenience is not implemented like finding if multiple pdf are chosen.
 import sys
+import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QCheckBox, QGridLayout, QComboBox, QLabel, QPushButton, QStackedLayout, QFileDialog, QLabel, QLineEdit
 from PyQt5.QtCore import Qt
 from PIL import Image
-from PyPDF2 import PdfFileMerger
+from PyPDF2 import PdfWriter
 
 class Example(QMainWindow):
     def __init__(self):
@@ -131,17 +132,9 @@ class Example(QMainWindow):
         # Create second stacked layouts
         self.pdf_stack = QStackedLayout()
 
-        # Create the pdf merge page
-        # self.pdf_merge_page = QWidget()
-        # self.pdf_merge_label = QLabel("This is PDF Merge")
-        # self.pdf_merge_button = QPushButton("Button 3")
-        # self.pdf_merge_layout = QVBoxLayout()
-        # self.pdf_merge_layout.addWidget(self.pdf_merge_label)
-        # self.pdf_merge_layout.addWidget(self.pdf_merge_button)
-        # self.pdf_merge_page.setLayout(self.pdf_merge_layout)
         self.pdf_merge_page = QWidget()
         pdf_merge_button1 = QPushButton("Select Multiple Image Files", self)
-        pdf_merge_button1.clicked.connect(lambda: self.select_file(pdf_merge_label1, 2))
+        pdf_merge_button1.clicked.connect(lambda: self.select_file(pdf_merge_label1, 3))
         pdf_merge_button2 = QPushButton("Convert and Merge")
         pdf_merge_button2.clicked.connect(lambda: self.pdf_merge_convert(pdf_merge_label1))
         pdf_merge_label1 = QLabel("This is Image to PDF Converter", self)
@@ -221,6 +214,18 @@ class Example(QMainWindow):
                         self.list_of_file_paths.append(file_path)
                         really_long_string += file_path + '\n'
                     label.setText(really_long_string)
+            case 3:
+                # To select some pdf files
+                really_long_string = ''
+                options = QFileDialog.Option()
+                file_paths, _ = QFileDialog.getOpenFileNames(self, "Select Files", "", "PDF Files (*.pdf)", options=options)
+                if file_paths:
+                    for file_path in file_paths:
+                        file_path = str(file_path)
+                        self.list_of_file_paths.append(file_path)
+                        really_long_string += file_path + '\n'
+                    label.setText(really_long_string)
+            
 
 
     """
@@ -357,7 +362,18 @@ class Example(QMainWindow):
         if len(self.list_of_file_paths) == 0:
             label.setText("Please select some pdf file first. (Note program does not error check if only 1 pdf is chosen)")
         else:
-            pass
+            # program so far only uses filename sorting
+            # TODO: do drag and drop to sort
+            self.list_of_file_paths.sort()
+            merger = PdfWriter()
+            for pdf in self.list_of_file_paths:
+                merger.append(pdf)
+            # creates a dialog to ask for new file name to be saved as pdf
+            options = QFileDialog.Options()
+            # options |= QFileDialog.DontUseNativeDialog
+            file_name, _ = QFileDialog.getSaveFileName(self, "Save File", "", "PDF (*.pdf)", options=options)
+            merger.write(file_name)
+            merger.close()
 
 
         
