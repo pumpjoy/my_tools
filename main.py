@@ -1,7 +1,9 @@
+# Note: I'm lazy so some user convenience is not implemented like finding if multiple pdf are chosen.
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QCheckBox, QGridLayout, QComboBox, QLabel, QPushButton, QStackedLayout, QFileDialog, QLabel, QLineEdit
 from PyQt5.QtCore import Qt
 from PIL import Image
+from PyPDF2 import PdfFileMerger
 
 class Example(QMainWindow):
     def __init__(self):
@@ -13,6 +15,8 @@ class Example(QMainWindow):
         self.tabs = QTabWidget()
         self.tab_jpg = QWidget()
         self.tab_pdf = QWidget()
+        
+        self.list_of_file_paths = []
 
 
         # First tab
@@ -21,7 +25,6 @@ class Example(QMainWindow):
         # Create the drop-down menus
         self.jpg_dropdown = QComboBox()
         self.jpg_dropdown.addItem("Image Resize(Percentage)")
-        self.jpg_dropdown.addItem("Image Resize(Aspect Ratio)")
         self.jpg_dropdown.addItem("Image Crop")
         self.jpg_dropdown.addItem("JPG-to-PDF Converter")
         self.jpg_dropdown.currentIndexChanged.connect(self.jpg_on_dropdown_changed)
@@ -49,36 +52,37 @@ class Example(QMainWindow):
         self.jpg_resize_layout.addStretch()
         self.jpg_resize_page.setLayout(self.jpg_resize_layout)
 
+        """
         # Create the jpg resize2 (freedom) page
         # TODO INCOMPLETE FUNCTION
-        self.jpg_resize2_page = QWidget()
-        jpg_resize2_button1 = QPushButton("Select Image File")
-        jpg_resize2_label1 = QLabel("Width")
-        self.jpg_resize2_line_edit1 = QLineEdit()
-        jpg_resize2_label2 = QLabel("Height")
-        self.jpg_resize2_line_edit2 = QLineEdit()
-        self.jpg_resize2_checkbox1 = QCheckBox(self)
-        self.jpg_resize2_checkbox1.stateChanged.connect(self.jpg_resizer)
-        jpg_resize2_label3 = QLabel("Maintain Aspect Ratio")
-        self.jpg_resize2_checkbox2 = QCheckBox(self)
-        self.jpg_resize2_checkbox2.stateChanged.connect(self.jpg_resizer)
-        jpg_resize2_label4 = QLabel("Do Not Enlarge")
-        jpg_resize2_button2 = QPushButton("Submit")
-        jpg_resize2_label5 = QLabel("")
-        jpg_resize2_button2.clicked.connect(lambda: self.resize(jpg_resize2_label5, 2))
-        jpg_resize2_layout = QGridLayout()
-        jpg_resize2_layout.addWidget(jpg_resize2_button1, 0, 0)
-        jpg_resize2_layout.addWidget(jpg_resize2_label1, 1, 0)
-        jpg_resize2_layout.addWidget(self.jpg_resize2_line_edit1, 1, 1)
-        jpg_resize2_layout.addWidget(jpg_resize2_label2, 2, 0)
-        jpg_resize2_layout.addWidget(self.jpg_resize2_line_edit2, 2, 1)
-        jpg_resize2_layout.addWidget(jpg_resize2_label3, 3, 0)
-        jpg_resize2_layout.addWidget(self.jpg_resize2_checkbox1, 3, 1)
-        jpg_resize2_layout.addWidget(jpg_resize2_label4, 4, 0)
-        jpg_resize2_layout.addWidget(self.jpg_resize2_checkbox1, 4, 1)
-        jpg_resize2_layout.setRowStretch(jpg_resize2_layout.rowCount(), 1)
-        self.jpg_resize2_page.setLayout(jpg_resize2_layout)
-
+        # self.jpg_resize2_page = QWidget()
+        # jpg_resize2_button1 = QPushButton("Select Image File")
+        # jpg_resize2_label1 = QLabel("Width")
+        # self.jpg_resize2_line_edit1 = QLineEdit()
+        # jpg_resize2_label2 = QLabel("Height")
+        # self.jpg_resize2_line_edit2 = QLineEdit()
+        # self.jpg_resize2_checkbox1 = QCheckBox(self)
+        # self.jpg_resize2_checkbox1.stateChanged.connect(self.jpg_resizer)
+        # jpg_resize2_label3 = QLabel("Maintain Aspect Ratio")
+        # self.jpg_resize2_checkbox2 = QCheckBox(self)
+        # self.jpg_resize2_checkbox2.stateChanged.connect(self.jpg_resizer)
+        # jpg_resize2_label4 = QLabel("Do Not Enlarge")
+        # jpg_resize2_button2 = QPushButton("Submit")
+        # jpg_resize2_label5 = QLabel("")
+        # jpg_resize2_button2.clicked.connect(lambda: self.resize(jpg_resize2_label5, 2))
+        # jpg_resize2_layout = QGridLayout()
+        # jpg_resize2_layout.addWidget(jpg_resize2_button1, 0, 0)
+        # jpg_resize2_layout.addWidget(jpg_resize2_label1, 1, 0)
+        # jpg_resize2_layout.addWidget(self.jpg_resize2_line_edit1, 1, 1)
+        # jpg_resize2_layout.addWidget(jpg_resize2_label2, 2, 0)
+        # jpg_resize2_layout.addWidget(self.jpg_resize2_line_edit2, 2, 1)
+        # jpg_resize2_layout.addWidget(jpg_resize2_label3, 3, 0)
+        # jpg_resize2_layout.addWidget(self.jpg_resize2_checkbox1, 3, 1)
+        # jpg_resize2_layout.addWidget(jpg_resize2_label4, 4, 0)
+        # jpg_resize2_layout.addWidget(self.jpg_resize2_checkbox1, 4, 1)
+        # jpg_resize2_layout.setRowStretch(jpg_resize2_layout.rowCount(), 1)
+        # self.jpg_resize2_page.setLayout(jpg_resize2_layout)
+        """
 
         # Create the jpg crop page
         self.jpg_crop_page = QWidget()
@@ -91,7 +95,6 @@ class Example(QMainWindow):
 
 
         # Create the jpg to pdf converter page
-        self.jpg_list_of_file_paths = []
         self.jpg_to_pdf_page = QWidget()
         jpg_to_pdf_button1 = QPushButton("Select Multiple Image Files", self)
         jpg_to_pdf_button1.clicked.connect(lambda: self.select_file(jpg_to_pdf_label1, 2))
@@ -110,7 +113,7 @@ class Example(QMainWindow):
 
         # Add the pages to the stack layouts
         self.jpg_stack.addWidget(self.jpg_resize_page)
-        self.jpg_stack.addWidget(self.jpg_resize2_page)
+        # self.jpg_stack.addWidget(self.jpg_resize2_page)
         self.jpg_stack.addWidget(self.jpg_crop_page)
         self.jpg_stack.addWidget(self.jpg_to_pdf_page)
 
@@ -129,12 +132,26 @@ class Example(QMainWindow):
         self.pdf_stack = QStackedLayout()
 
         # Create the pdf merge page
+        # self.pdf_merge_page = QWidget()
+        # self.pdf_merge_label = QLabel("This is PDF Merge")
+        # self.pdf_merge_button = QPushButton("Button 3")
+        # self.pdf_merge_layout = QVBoxLayout()
+        # self.pdf_merge_layout.addWidget(self.pdf_merge_label)
+        # self.pdf_merge_layout.addWidget(self.pdf_merge_button)
+        # self.pdf_merge_page.setLayout(self.pdf_merge_layout)
         self.pdf_merge_page = QWidget()
-        self.pdf_merge_label = QLabel("This is PDF Merge")
-        self.pdf_merge_button = QPushButton("Button 3")
+        pdf_merge_button1 = QPushButton("Select Multiple Image Files", self)
+        pdf_merge_button1.clicked.connect(lambda: self.select_file(pdf_merge_label1, 2))
+        pdf_merge_button2 = QPushButton("Convert and Merge")
+        pdf_merge_button2.clicked.connect(lambda: self.pdf_merge_convert(pdf_merge_label1))
+        pdf_merge_label1 = QLabel("This is Image to PDF Converter", self)
+        self.pdf_merge_label2 = QLabel("", self)
         self.pdf_merge_layout = QVBoxLayout()
-        self.pdf_merge_layout.addWidget(self.pdf_merge_label)
-        self.pdf_merge_layout.addWidget(self.pdf_merge_button)
+        self.pdf_merge_layout.addWidget(pdf_merge_button1)
+        self.pdf_merge_layout.addWidget(pdf_merge_button2)
+        self.pdf_merge_layout.addWidget(self.pdf_merge_label2)
+        self.pdf_merge_layout.addWidget(pdf_merge_label1)
+        self.pdf_merge_layout.addStretch()
         self.pdf_merge_page.setLayout(self.pdf_merge_layout)
 
         # Create the pdf split page
@@ -183,7 +200,7 @@ class Example(QMainWindow):
     * i to keep track of which button is calling
     """
     def select_file(self, label, i):
-        self.jpg_list_of_file_paths = []
+        self.list_of_file_paths = []
         match(i):
             case 1:
                 # Select single image file
@@ -191,7 +208,7 @@ class Example(QMainWindow):
                 file_paths, _ = QFileDialog.getOpenFileNames(self, "Select Files", "", "Image Files (*.jpg *.jpeg *.png)", options=options)
                 if file_paths:
                     file_path = str(file_paths[0])
-                    self.jpg_list_of_file_paths.append(file_path)
+                    self.list_of_file_paths.append(file_path)
                     label.setText(file_path)
             case 2:
                 # To select image files
@@ -201,7 +218,7 @@ class Example(QMainWindow):
                 if file_paths:
                     for file_path in file_paths:
                         file_path = str(file_path)
-                        self.jpg_list_of_file_paths.append(file_path)
+                        self.list_of_file_paths.append(file_path)
                         really_long_string += file_path + '\n'
                     label.setText(really_long_string)
 
@@ -216,9 +233,9 @@ class Example(QMainWindow):
                 # Check if within range of 0 to 300
                 if user_input.isnumeric():
                     if int(user_input)>=0 and int(user_input)<= 300:
-                        if len(self.jpg_list_of_file_paths) == 0:
+                        if len(self.list_of_file_paths) == 0:
                             label.setText("Please select an image file first.")
-                        input_image = Image.open(self.jpg_list_of_file_paths[0])
+                        input_image = Image.open(self.list_of_file_paths[0])
                         width, height = input_image.size
                         new_width = int(width*int(user_input)/100)
                         new_height = int(height*int(user_input)/100)
@@ -226,7 +243,7 @@ class Example(QMainWindow):
 
                         # Select where to save
                         options = QFileDialog.Options()
-                        file_type = self.jpg_list_of_file_paths[0][-4:]
+                        file_type = self.list_of_file_paths[0][-4:]
                         match(file_type):
                             case ".jpg":
                                 file_type = "JPG (*.jpg)"
@@ -249,7 +266,7 @@ class Example(QMainWindow):
 
                 if user_input.isnumeric(): pass
 
-                with Image.open(self.jpg_list_of_file_paths[0]) as image:
+                with Image.open(self.list_of_file_paths[0]) as image:
                     # keep aspect ratio
                     if self.jpg_resize2_checkbox1.isChecked(): 
                         width_ratio = user_width / input_image.width if user_width is not None else user_height / image.height
@@ -274,7 +291,7 @@ class Example(QMainWindow):
 
                     # Select where to save
                     options = QFileDialog.Options()
-                    file_type = self.jpg_list_of_file_paths[0][-4:]
+                    file_type = self.list_of_file_paths[0][-4:]
                     match(file_type):
                         case ".jpg":
                             file_type = "JPG (*.jpg)"
@@ -296,7 +313,7 @@ class Example(QMainWindow):
     """
     def jpg_to_pdf_convert(self, label):
         # check if theres convertible files in list
-        if len(self.jpg_list_of_file_paths) == 0:
+        if len(self.list_of_file_paths) == 0:
             label.setText("Please select an image file first.")
         else:
             # creates a dialog to ask for new file name to be saved as pdf
@@ -307,7 +324,7 @@ class Example(QMainWindow):
             # actual conversion
             image_list = []
             # if png, direct just change the file type
-            image1 = Image.open(self.jpg_list_of_file_paths[0])
+            image1 = Image.open(self.list_of_file_paths[0])
             if image1.mode == 'RGBA':
                 bg = Image.new("RGB", image1.size, (255,255,255)) #if transparent background, turn black
                 bg.paste(image1, mask=image1.split()[3])
@@ -316,7 +333,7 @@ class Example(QMainWindow):
                 image1.convert('RGB')
                 
                 
-            for file_path in self.jpg_list_of_file_paths[1:]:
+            for file_path in self.list_of_file_paths[1:]:
                 image = Image.open(file_path)
                 if image.mode == 'RGBA':
                     bg = Image.new('RGB', image.size, (255, 255, 255)) # create a new white background image
@@ -330,6 +347,19 @@ class Example(QMainWindow):
                 self.jpg_to_pdf_label2.setText("Convert complete")
             except ValueError as e:
                 pass
+    
+
+    """
+    pdf merger
+    """
+    def pdf_merge_convert(self, label):
+        # check if theres convertible files in list
+        if len(self.list_of_file_paths) == 0:
+            label.setText("Please select some pdf file first. (Note program does not error check if only 1 pdf is chosen)")
+        else:
+            pass
+
+
         
         
 
