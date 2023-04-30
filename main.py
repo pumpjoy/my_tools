@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QComboBox, QLabel, QPushButton, QStackedLayout, QFileDialog, QLabel, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QCheckBox, QGridLayout, QComboBox, QLabel, QPushButton, QStackedLayout, QFileDialog, QLabel, QLineEdit
 from PyQt5.QtCore import Qt
 from PIL import Image
 
@@ -20,7 +20,8 @@ class Example(QMainWindow):
         
         # Create the drop-down menus
         self.jpg_dropdown = QComboBox()
-        self.jpg_dropdown.addItem("Image Resize")
+        self.jpg_dropdown.addItem("Image Resize(Percentage)")
+        self.jpg_dropdown.addItem("Image Resize(Aspect Ratio)")
         self.jpg_dropdown.addItem("Image Crop")
         self.jpg_dropdown.addItem("JPG-to-PDF Converter")
         self.jpg_dropdown.currentIndexChanged.connect(self.jpg_on_dropdown_changed)
@@ -31,13 +32,13 @@ class Example(QMainWindow):
         # Create the jpg resize page
         self.jpg_resize_page = QWidget()
         jpg_resize_button1 = QPushButton("Select Image File")
-        jpg_resize_button2 = QPushButton("Submit", self)
         jpg_resize_button1.clicked.connect(lambda: self.select_file(self.jpg_resize_label3, 1))
-        jpg_resize_label1 = QLabel("Enter a number between 0 and 100: (Resize based on percentage)")
+        jpg_resize_label1 = QLabel("Enter a number between 0 and 300: (Resize based on percentage)")
+        self.jpg_resize_line_edit1 = QLineEdit()
+        jpg_resize_button2 = QPushButton("Submit", self)
+        jpg_resize_button2.clicked.connect(lambda: self.jpg_resizer(self.jpg_resize_label2, 1))
         self.jpg_resize_label2 = QLabel("Only first file will be taken if multiple are selected")
         self.jpg_resize_label3 = QLabel("File selected")
-        self.jpg_resize_line_edit1 = QLineEdit()
-        jpg_resize_button2.clicked.connect(self.jpg_resizer)
         self.jpg_resize_layout = QVBoxLayout()
         self.jpg_resize_layout.addWidget(jpg_resize_button1)
         self.jpg_resize_layout.addWidget(jpg_resize_label1)
@@ -47,6 +48,36 @@ class Example(QMainWindow):
         self.jpg_resize_layout.addWidget(self.jpg_resize_label3)
         self.jpg_resize_layout.addStretch()
         self.jpg_resize_page.setLayout(self.jpg_resize_layout)
+
+        # Create the jpg resize2 (freedom) page
+        # TODO INCOMPLETE FUNCTION
+        self.jpg_resize2_page = QWidget()
+        jpg_resize2_button1 = QPushButton("Select Image File")
+        jpg_resize2_label1 = QLabel("Width")
+        self.jpg_resize2_line_edit1 = QLineEdit()
+        jpg_resize2_label2 = QLabel("Height")
+        self.jpg_resize2_line_edit2 = QLineEdit()
+        self.jpg_resize2_checkbox1 = QCheckBox(self)
+        self.jpg_resize2_checkbox1.stateChanged.connect(self.jpg_resizer)
+        jpg_resize2_label3 = QLabel("Maintain Aspect Ratio")
+        self.jpg_resize2_checkbox2 = QCheckBox(self)
+        self.jpg_resize2_checkbox2.stateChanged.connect(self.jpg_resizer)
+        jpg_resize2_label4 = QLabel("Do Not Enlarge")
+        jpg_resize2_button2 = QPushButton("Submit")
+        jpg_resize2_label5 = QLabel("")
+        jpg_resize2_button2.clicked.connect(lambda: self.resize(jpg_resize2_label5, 2))
+        jpg_resize2_layout = QGridLayout()
+        jpg_resize2_layout.addWidget(jpg_resize2_button1, 0, 0)
+        jpg_resize2_layout.addWidget(jpg_resize2_label1, 1, 0)
+        jpg_resize2_layout.addWidget(self.jpg_resize2_line_edit1, 1, 1)
+        jpg_resize2_layout.addWidget(jpg_resize2_label2, 2, 0)
+        jpg_resize2_layout.addWidget(self.jpg_resize2_line_edit2, 2, 1)
+        jpg_resize2_layout.addWidget(jpg_resize2_label3, 3, 0)
+        jpg_resize2_layout.addWidget(self.jpg_resize2_checkbox1, 3, 1)
+        jpg_resize2_layout.addWidget(jpg_resize2_label4, 4, 0)
+        jpg_resize2_layout.addWidget(self.jpg_resize2_checkbox1, 4, 1)
+        jpg_resize2_layout.setRowStretch(jpg_resize2_layout.rowCount(), 1)
+        self.jpg_resize2_page.setLayout(jpg_resize2_layout)
 
 
         # Create the jpg crop page
@@ -79,6 +110,7 @@ class Example(QMainWindow):
 
         # Add the pages to the stack layouts
         self.jpg_stack.addWidget(self.jpg_resize_page)
+        self.jpg_stack.addWidget(self.jpg_resize2_page)
         self.jpg_stack.addWidget(self.jpg_crop_page)
         self.jpg_stack.addWidget(self.jpg_to_pdf_page)
 
@@ -175,42 +207,89 @@ class Example(QMainWindow):
 
 
     """
-    jpg resizer 
+    jpg resizer (ONLY SUPPORT 1 FILE FOR NOW)
     """
-    def jpg_resizer(self):
+    def jpg_resizer(self, label, i):
         user_input = self.jpg_resize_line_edit1.text()
+        match(i):
+            case 1:
+                # Check if within range of 0 to 300
+                if user_input.isnumeric():
+                    if int(user_input)>=0 and int(user_input)<= 300:
+                        if len(self.jpg_list_of_file_paths) == 0:
+                            label.setText("Please select an image file first.")
+                        input_image = Image.open(self.jpg_list_of_file_paths[0])
+                        width, height = input_image.size
+                        new_width = int(width*int(user_input)/100)
+                        new_height = int(height*int(user_input)/100)
+                        resized_image = input_image.resize((new_width, new_height))
 
-        # Check if within range of 0 to 100
-        if user_input.isnumeric():
-            if int(user_input)>=0 and int(user_input)<= 100:
-                if len(self.jpg_list_of_file_paths) == 0:
-                    self.jpg_resize_label2.setText("Please select an image file first.")
-                input_image = Image.open(self.jpg_list_of_file_paths[0])
-                width, height = input_image.size
-                new_width = int(width*int(user_input)/100)
-                new_height = int(height*int(user_input)/100)
-                resized_image = input_image.resize((new_width, new_height))
+                        # Select where to save
+                        options = QFileDialog.Options()
+                        file_type = self.jpg_list_of_file_paths[0][-4:]
+                        match(file_type):
+                            case ".jpg":
+                                file_type = "JPG (*.jpg)"
+                            case ".jpeg":
+                                file_type = "JPEG(*.jpeg)"
+                            case ".png":
+                                file_type = "PNG (*.png)"
+                        file_name, _ = QFileDialog.getSaveFileName(self, "Save File", "", file_type, options=options)
+                        try:
+                            resized_image.save(file_name)
+                            label.setText("Resize done.")
+                        except ValueError as e:
+                            pass
+                        return
+                label.setText("Please enter a number between 0 and 300")
 
-                # Select where to save
-                options = QFileDialog.Options()
-                file_type = self.jpg_list_of_file_paths[0][-4:]
-                match(file_type):
-                    case ".jpg":
-                        file_type = "JPG (*.jpg)"
-                    case ".jpeg":
-                        file_type = "JPEG(*.jpeg)"
-                    case ".png":
-                        file_type = "PNG (*.png)"
-                file_name, _ = QFileDialog.getSaveFileName(self, "Save File", "", file_type, options=options)
-                try:
-                    resized_image.save(file_name)
-                    self.jpg_resize_label2.setText("Resize done.")
-                except ValueError as e:
-                    pass
-                return
-        self.jpg_resize_label2.setText("Please enter a number between 0 and 100")
+            case 2:
+                user_width = self.jpg_resize2_line_edit1.text()
+                user_height = self.jpg_resize2_line_edit2.text()
+
+                if user_input.isnumeric(): pass
+
+                with Image.open(self.jpg_list_of_file_paths[0]) as image:
+                    # keep aspect ratio
+                    if self.jpg_resize2_checkbox1.isChecked(): 
+                        width_ratio = user_width / input_image.width if user_width is not None else user_height / image.height
+                        height_ratio= user_height / image.height if user_height is not None else user_width / image.width
+                        ratio = min(width_ratio, height_ratio)
+                        new_width = int(image.width * ratio)
+                        new_height = int(image.height * ratio)
+
+                    else:
+                        new_width = user_width
+                        new_height= user_width
 
 
+                    # Check if image is allowed to enlarge 
+                    # TODO:
+                    # if self.jpg_resize2_checkbox1.isChecked(): 
+                    #     user_width > image.width 
+
+
+                    # Return and save
+                    resized_image = input_image.resize((new_width, new_height))
+
+                    # Select where to save
+                    options = QFileDialog.Options()
+                    file_type = self.jpg_list_of_file_paths[0][-4:]
+                    match(file_type):
+                        case ".jpg":
+                            file_type = "JPG (*.jpg)"
+                        case ".jpeg":
+                            file_type = "JPEG(*.jpeg)"
+                        case ".png":
+                            file_type = "PNG (*.png)"
+                    file_name, _ = QFileDialog.getSaveFileName(self, "Save File", "", file_type, options=options)
+                    try:
+                        resized_image.save(file_name)
+                        label.setText("Resize done.")
+                    except ValueError as e:
+                        pass
+                    return
+                
 
     """
     Change jpg to pdf convert 
