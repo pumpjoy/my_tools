@@ -1,0 +1,47 @@
+from picamera2 import Picamera2, Preview
+from libcamera import Transform, controls
+import time
+from datetime import datetime
+import pytz
+
+#INITIATE PICAMERA 
+picam2 = Picamera2()
+
+
+def take_picture():
+    camera_config = picam2.create_still_configuration(transform=Transform(vflip=1))
+    picam2.set_controls({"ExposureTime": 30000, "AnalogueGain": 1.0})
+    picam2.configure(camera_config)
+    now = datetime.now(pytz.timezone('Asia/Singapore'))
+    current_time = now.strftime("%y%m%d_%H_%M_%S")
+    picam2.start()
+    picam2.capture_file("crab_raw/"+ current_time+".jpg")
+    time.sleep(2)
+    picam2.stop()
+
+def streamthis():
+    camera_config = picam2.create_preview_configuration(transform=Transform(vflip=1))
+    #picam2.set_controls({"ExposureTime": 40000, "AnalogueGain": 1.0})
+    picam2.configure(camera_config)
+    picam2.start_preview(Preview.QT)
+    picam2.start()
+
+
+
+def time_now_is():
+    now = datetime.now()
+    
+
+def main():
+    now = datetime.now()
+    
+    #while(1):
+    #   take_picture()
+    #   time.sleep(10)
+    
+    #take_picture()
+    streamthis()
+    
+    
+
+main()
