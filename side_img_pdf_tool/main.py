@@ -1,6 +1,7 @@
 # Note: I'm lazy so some user convenience is not implemented like finding if multiple pdf are chosen.
 import sys
 import os
+import shutil
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QCheckBox, QGridLayout, QComboBox, QLabel, QPushButton, QStackedLayout, QFileDialog, QLabel, QLineEdit
 from PyQt5.QtCore import Qt
 from PIL import Image
@@ -10,39 +11,42 @@ class Example(QMainWindow):
     def __init__(self):
         super().__init__()
         self.resize(800,800)
-        self.setWindowTitle("Tools 0.2")
+        self.setWindowTitle("Tools 0.3")
 
         # Create the tabs and set up the layout
         self.tabs = QTabWidget()
         self.tab_jpg = QWidget()
         self.tab_pdf = QWidget()
+        self.tab_folder = QWidget()
         
         self.list_of_file_paths = []
-
-
-        # First tab
+        
+        ####################################################
+        # First tab: JPG
         self.tabs.addTab(self.tab_jpg, "JPG")
         
         # Create the drop-down menus
         self.jpg_dropdown = QComboBox()
-        self.jpg_dropdown.addItem("Image Resize(Percentage)")
+        self.jpg_dropdown.addItem("Image Resize (Percentage)")
         self.jpg_dropdown.addItem("Image Crop")
         self.jpg_dropdown.addItem("JPG-to-PDF Converter")
         self.jpg_dropdown.currentIndexChanged.connect(self.jpg_on_dropdown_changed)
         
         # Create first stacked layouts
         self.jpg_stack = QStackedLayout()
-
+        
+        ##########################
+        # Stack 1: JPG-Resizer (Percentage)
         # Create the jpg resize page
         self.jpg_resize_page = QWidget()
+        jpg_resize_label1 = QLabel("Enter a number between 0 and 300: (Resize based on percentage)")
+        self.jpg_resize_label2 = QLabel("")
+        self.jpg_resize_label3 = QLabel("File selected")
         jpg_resize_button1 = QPushButton("Select Image File")
         jpg_resize_button1.clicked.connect(lambda: self.select_file(self.jpg_resize_label3, 1))
-        jpg_resize_label1 = QLabel("Enter a number between 0 and 300: (Resize based on percentage)")
-        self.jpg_resize_line_edit1 = QLineEdit()
         jpg_resize_button2 = QPushButton("Submit", self)
         jpg_resize_button2.clicked.connect(lambda: self.jpg_resizer(self.jpg_resize_label2, 1))
-        self.jpg_resize_label2 = QLabel("Only first file will be taken if multiple are selected")
-        self.jpg_resize_label3 = QLabel("File selected")
+        self.jpg_resize_line_edit1 = QLineEdit()
         self.jpg_resize_layout = QVBoxLayout()
         self.jpg_resize_layout.addWidget(jpg_resize_button1)
         self.jpg_resize_layout.addWidget(jpg_resize_label1)
@@ -53,18 +57,21 @@ class Example(QMainWindow):
         self.jpg_resize_layout.addStretch()
         self.jpg_resize_page.setLayout(self.jpg_resize_layout)
 
+        ##########################
+        # Stack 2: JPG-Resizer 2 (Freedom) 
+        # Create the JPG Resize page
         """
         # Create the jpg resize2 (freedom) page
         # TODO INCOMPLETE FUNCTION
         # self.jpg_resize2_page = QWidget()
-        # jpg_resize2_button1 = QPushButton("Select Image File")
         # jpg_resize2_label1 = QLabel("Width")
-        # self.jpg_resize2_line_edit1 = QLineEdit()
         # jpg_resize2_label2 = QLabel("Height")
+        # jpg_resize2_label3 = QLabel("Maintain Aspect Ratio")
+        # jpg_resize2_button1 = QPushButton("Select Image File")
+        # self.jpg_resize2_line_edit1 = QLineEdit()
         # self.jpg_resize2_line_edit2 = QLineEdit()
         # self.jpg_resize2_checkbox1 = QCheckBox(self)
         # self.jpg_resize2_checkbox1.stateChanged.connect(self.jpg_resizer)
-        # jpg_resize2_label3 = QLabel("Maintain Aspect Ratio")
         # self.jpg_resize2_checkbox2 = QCheckBox(self)
         # self.jpg_resize2_checkbox2.stateChanged.connect(self.jpg_resizer)
         # jpg_resize2_label4 = QLabel("Do Not Enlarge")
@@ -84,8 +91,10 @@ class Example(QMainWindow):
         # jpg_resize2_layout.setRowStretch(jpg_resize2_layout.rowCount(), 1)
         # self.jpg_resize2_page.setLayout(jpg_resize2_layout)
         """
-
-        # Create the jpg crop page
+        
+        ##########################
+        # Stack 3: JPG-Crop 
+        # Create the JPG crop page
         self.jpg_crop_page = QWidget()
         self.jpg_crop_label1 = QLabel("This is JPG Crop")
         self.jpg_crop_button1 = QPushButton("Button 2")
@@ -94,15 +103,17 @@ class Example(QMainWindow):
         self.jpg_crop_layout.addWidget(self.jpg_crop_button1)
         self.jpg_crop_page.setLayout(self.jpg_crop_layout)
 
-
-        # Create the jpg to pdf converter page
+        ##########################
+        # Stack 4: JPG-to-PDF Converter
+        # Create the JPG to PDF Converter page
         self.jpg_to_pdf_page = QWidget()
+        jpg_to_pdf_label1 = QLabel("This is Image to PDF Converter", self)
+        self.jpg_to_pdf_label2 = QLabel("", self)
         jpg_to_pdf_button1 = QPushButton("Select Multiple Image Files", self)
         jpg_to_pdf_button1.clicked.connect(lambda: self.select_file(jpg_to_pdf_label1, 2))
         jpg_to_pdf_button2 = QPushButton("Convert and Merge")
         jpg_to_pdf_button2.clicked.connect(lambda: self.jpg_to_pdf_convert(jpg_to_pdf_label1))
-        jpg_to_pdf_label1 = QLabel("This is Image to PDF Converter", self)
-        self.jpg_to_pdf_label2 = QLabel("", self)
+        
         self.jpg_to_pdf_layout = QVBoxLayout()
         self.jpg_to_pdf_layout.addWidget(jpg_to_pdf_button1)
         self.jpg_to_pdf_layout.addWidget(jpg_to_pdf_button2)
@@ -111,7 +122,9 @@ class Example(QMainWindow):
         self.jpg_to_pdf_layout.addStretch()
         self.jpg_to_pdf_page.setLayout(self.jpg_to_pdf_layout)
 
-
+        
+        ####################################################
+        # Summarize JPG Tab
         # Add the pages to the stack layouts
         self.jpg_stack.addWidget(self.jpg_resize_page)
         # self.jpg_stack.addWidget(self.jpg_resize2_page)
@@ -119,8 +132,7 @@ class Example(QMainWindow):
         self.jpg_stack.addWidget(self.jpg_to_pdf_page)
 
 ############################################################
-
-        # Second tab
+        # Second tab: PDF
         self.tabs.addTab(self.tab_pdf, "PDF")
 
         # Create the drop-down menus
@@ -131,14 +143,17 @@ class Example(QMainWindow):
 
         # Create second stacked layouts
         self.pdf_stack = QStackedLayout()
-
+        
+        ##########################
+        # Stack 1: PDF Merge 
+        # Create PDF Merge page
         self.pdf_merge_page = QWidget()
-        pdf_merge_button1 = QPushButton("Select Multiple Image Files", self)
-        pdf_merge_button1.clicked.connect(lambda: self.select_file(pdf_merge_label1, 3))
-        pdf_merge_button2 = QPushButton("Convert and Merge")
-        pdf_merge_button2.clicked.connect(lambda: self.pdf_merge_convert(pdf_merge_label1))
-        pdf_merge_label1 = QLabel("This is Image to PDF Converter", self)
+        pdf_merge_label1 = QLabel("This is PDF Merger", self)
         self.pdf_merge_label2 = QLabel("", self)
+        pdf_merge_button1 = QPushButton("Select Multiple PDF Files", self)
+        pdf_merge_button1.clicked.connect(lambda: self.select_file(pdf_merge_label1, 4))
+        pdf_merge_button2 = QPushButton("Merge PDF Files")
+        pdf_merge_button2.clicked.connect(lambda: self.pdf_merge_convert(pdf_merge_label1))
         self.pdf_merge_layout = QVBoxLayout()
         self.pdf_merge_layout.addWidget(pdf_merge_button1)
         self.pdf_merge_layout.addWidget(pdf_merge_button2)
@@ -147,7 +162,9 @@ class Example(QMainWindow):
         self.pdf_merge_layout.addStretch()
         self.pdf_merge_page.setLayout(self.pdf_merge_layout)
 
-        # Create the pdf split page
+        ##########################
+        # Stack 2: PDF Split
+        # Create the PDF Split page
         self.pdf_split_page = QWidget()
         self.pdf_split_label = QLabel("This is PDF Split")
         self.pdf_split_button = QPushButton("Button 4")
@@ -156,12 +173,49 @@ class Example(QMainWindow):
         self.pdf_split_layout.addWidget(self.pdf_split_button)
         self.pdf_split_page.setLayout(self.pdf_split_layout)
 
-
+        ####################################################
+        # Summarize PDF tab
         # Add the pages to the stack layouts
         self.pdf_stack.addWidget(self.pdf_merge_page)
         self.pdf_stack.addWidget(self.pdf_split_page)
 
 ############################################################
+        # Third tab: Folder 
+        self.tabs.addTab(self.tab_folder, "Folder")
+
+        # Create the drop-down menus
+        self.folder_dropdown = QComboBox()
+        self.folder_dropdown.addItem("Subfolder Remover")
+        self.folder_dropdown.currentIndexChanged.connect(self.pdf_on_dropdown_changed)
+
+        # Create third stacked layouts
+        self.folder_stack = QStackedLayout()
+        
+        # Create SubFolder Remover Page
+        self.subf_remove_page = QWidget()
+        subf_remove_label1 = QLabel("This will extract 1 level of subfolder depth within the folder; The contents of subfolders in this folder will be extracted and deleted into this folder.")
+        subf_remove_label2 = QLabel("")
+        self.subf_remove_label3 = QLabel("", self)
+        subf_remove_button1= QPushButton("Select Folder")
+        subf_remove_button1.clicked.connect(lambda: self.select_file(subf_remove_label2, 5))
+        subf_remove_button2= QPushButton("Subfolder remove")
+        subf_remove_button2.clicked.connect(lambda: self.subfolder_remove())
+        self.subf_remove_layout = QVBoxLayout()
+        self.subf_remove_layout.addWidget(subf_remove_button1)
+        self.subf_remove_layout.addWidget(subf_remove_button2)
+        self.subf_remove_layout.addWidget(subf_remove_label1)
+        self.subf_remove_layout.addWidget(subf_remove_label2)
+        self.subf_remove_layout.addWidget(self.subf_remove_label3)
+        self.subf_remove_layout.addStretch()
+        self.subf_remove_page.setLayout(self.subf_remove_layout)
+        
+        ####################################################
+        # Summarize Folder tab
+        self.folder_stack.addWidget(self.subf_remove_page)
+
+
+############################################################
+        # Summarize all tab
         # Set up the layout for each tab
         self.layout_tab_jpg = QVBoxLayout()
         self.layout_tab_jpg.addWidget(self.jpg_dropdown)
@@ -172,6 +226,11 @@ class Example(QMainWindow):
         self.layout_tab_pdf.addWidget(self.pdf_dropdown)
         self.layout_tab_pdf.addLayout(self.pdf_stack)
         self.tab_pdf.setLayout(self.layout_tab_pdf)
+        
+        self.layout_tab_folder = QVBoxLayout()
+        self.layout_tab_folder.addWidget(self.folder_dropdown)
+        self.layout_tab_folder.addLayout(self.folder_stack)
+        self.tab_folder.setLayout(self.layout_tab_folder)
 
         # Set the central widget and show the window
         self.setCentralWidget(self.tabs)
@@ -182,29 +241,32 @@ class Example(QMainWindow):
     def jpg_on_dropdown_changed(self, index):
         self.jpg_stack.setCurrentIndex(index)
 
-
     def pdf_on_dropdown_changed(self, index):
-        self.pdf_stack.setCurrentIndex(index)
+        self.pdf_stack.setCurrentIndex(index)        
+
+    def folder_on_dropdown_changed(self, index):
+        self.folder_stack.setCurrentIndex(index)
 
 
     """
     select file
-    * label to determine which label to change text
-    * i to keep track of which button is calling
+    * Label to determine which label to change text
+    @param
+        i - integer. To keep track of which button is calling. I'm too lazy to make multiple, will change if have issues.
     """
     def select_file(self, label, i):
         self.list_of_file_paths = []
+        # options = QFileDialog.Option()
         match(i):
             case 1:
-                # Select single image file
+                # Select 1 Image File 
                 options = QFileDialog.Option()
-                file_paths, _ = QFileDialog.getOpenFileNames(self, "Select Files", "", "Image Files (*.jpg *.jpeg *.png)", options=options)
-                if file_paths:
-                    file_path = str(file_paths[0])
-                    self.list_of_file_paths.append(file_path)
-                    label.setText(file_path)
+                file_path, _ = QFileDialog.getOpenFileName(self, "Select Files", "", "Image Files (*.jpg *.jpeg *.png)", options=options)
+                if file_path: 
+                    self.list_of_file_paths.append(str(file_path))
+                    label.setText(f"Selected: {file_path}")
             case 2:
-                # To select image files
+                # Select Multiple Image Files
                 really_long_string = ''
                 options = QFileDialog.Option()
                 file_paths, _ = QFileDialog.getOpenFileNames(self, "Select Files", "", "Image Files (*.jpg *.jpeg *.png)", options=options)
@@ -215,7 +277,14 @@ class Example(QMainWindow):
                         really_long_string += file_path + '\n'
                     label.setText(really_long_string)
             case 3:
-                # To select some pdf files
+                # Select 1 PDF File 
+                options = QFileDialog.Option()
+                file_path, _ = QFileDialog.getOpenFileName(self, "Select Files", "", "PDF Files (*.pdf)", options=options)
+                if file_path: 
+                    self.list_of_file_paths.append(str(file_path))
+                    label.setText(f"Selected: {file_path}")
+            case 4:
+                # Select Multiple PDF files
                 really_long_string = ''
                 options = QFileDialog.Option()
                 file_paths, _ = QFileDialog.getOpenFileNames(self, "Select Files", "", "PDF Files (*.pdf)", options=options)
@@ -225,7 +294,13 @@ class Example(QMainWindow):
                         self.list_of_file_paths.append(file_path)
                         really_long_string += file_path + '\n'
                     label.setText(really_long_string)
-            
+            case 5: 
+                # Select 1 Folder 
+                file_path = QFileDialog.getExistingDirectory(self, "Select Folder", "")
+                if file_path: 
+                    self.list_of_file_paths.append(str(file_path))
+                    label.setText(f"Selected: {file_path}")
+
 
 
     """
@@ -310,25 +385,25 @@ class Example(QMainWindow):
                         label.setText("Resize done.")
                     except ValueError as e:
                         pass
-                    return
-                
+                    return          
+
 
     """
     Change jpg to pdf convert 
     """
     def jpg_to_pdf_convert(self, label):
-        # check if theres convertible files in list
+        # Check if theres convertible files in list
         if len(self.list_of_file_paths) == 0:
             label.setText("Please select an image file first.")
         else:
-            # creates a dialog to ask for new file name to be saved as pdf
+            # Creates a dialog to ask for new file name to be saved as pdf
             options = QFileDialog.Options()
             # options |= QFileDialog.DontUseNativeDialog
             file_name, _ = QFileDialog.getSaveFileName(self, "Save File", "", "PDF (*.pdf)", options=options)
 
-            # actual conversion
+            # Actual conversion
             image_list = []
-            # if png, direct just change the file type
+            # If png, direct just change the file type
             image1 = Image.open(self.list_of_file_paths[0])
             if image1.mode == 'RGBA':
                 bg = Image.new("RGB", image1.size, (255,255,255)) #if transparent background, turn black
@@ -353,22 +428,23 @@ class Example(QMainWindow):
             except ValueError as e:
                 pass
     
+    
 
     """
     pdf merger
     """
     def pdf_merge_convert(self, label):
-        # check if theres convertible files in list
+        # Check if theres convertible files in list
         if len(self.list_of_file_paths) == 0:
             label.setText("Please select some pdf file first. (Note program does not error check if only 1 pdf is chosen)")
         else:
-            # program so far only uses filename sorting
+            # Program so far only uses filename sorting
             # TODO: do drag and drop to sort
             self.list_of_file_paths.sort()
             merger = PdfWriter()
             for pdf in self.list_of_file_paths:
                 merger.append(pdf)
-            # creates a dialog to ask for new file name to be saved as pdf
+            # Creates a dialog to ask for new file name to be saved as pdf
             options = QFileDialog.Options()
             # options |= QFileDialog.DontUseNativeDialog
             file_name, _ = QFileDialog.getSaveFileName(self, "Save File", "", "PDF (*.pdf)", options=options)
@@ -376,8 +452,63 @@ class Example(QMainWindow):
             merger.close()
 
 
+
+    """
+    subfolder remove
+    """
+    def subfolder_remove(self):
+        # Sanity check check if there's convertible folder in list
+        # self.list_of_file_paths is the big folder
+        if len(self.list_of_file_paths) == 0:
+            self.subf_remove_label3.setText("Please select a folder.")
+            return
         
+        main_folder = None
+        for path in self.list_of_file_paths:
+            try:
+                if os.path.isdir(path):
+                    main_folder = path
+                    break
+            except Exception as e:
+                self.subf_remove_label3.setText(f"Error checking directory: {str(e)}")
+                return
+            
+        if not main_folder:
+            self.subf_remove_label3.setText("This folder does not have subfolder to be extracted and removed.")
+            return
+
+        # List of all directories within the main folder
+        subdirectories = [entry for entry in os.listdir(main_folder) if os.path.isdir(os.path.join(main_folder, entry))]
         
+        # Check if subfolders exist
+        # if not subdirectories:
+        #     self.subf_remove_label3.setText("This folder does not have subfolder to be extracted and removed.")
+        #     return
+        
+        # Continue extract if subfolders exist
+        for subdirectory in subdirectories:
+            sub_path = os.path.join(main_folder, subdirectory)
+            
+            try:
+                # Get all contents of subdirectory
+                contents = os.listdir(sub_path)
+                
+                for content in contents:
+                    src_path = os.path.join(sub_path, content)
+                    des_path = os.path.join(main_folder, content)
+                    
+                    # Move each item from subfolder to main folder
+                    shutil.move(src_path, des_path)
+            
+                # After moving all items, remove the empty subfolder
+                if not os.listdir(sub_path):
+                    os.rmdir(sub_path)
+            
+            except Exception as e:
+                self.subf_remove_label3.setText(f"An error occurred while processing {subdirectory}: {str(e)}")
+        
+        self.subf_remove_label3.setText("Subfolders extracted and removed.")
+                    
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
