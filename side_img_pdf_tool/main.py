@@ -11,7 +11,7 @@ class Example(QMainWindow):
     def __init__(self):
         super().__init__()
         self.resize(800,800)
-        self.setWindowTitle("Tools 0.3")
+        self.setWindowTitle("Tools 0.4")
 
         # Create the tabs and set up the layout
         self.tabs = QTabWidget()
@@ -27,8 +27,9 @@ class Example(QMainWindow):
         
         # Create the drop-down menus
         self.jpg_dropdown = QComboBox()
-        self.jpg_dropdown.addItem("Image Resize (Percentage)")
-        self.jpg_dropdown.addItem("Image Crop")
+        self.jpg_dropdown.addItem("JPG/PNG Resize (Percentage)")
+        self.jpg_dropdown.addItem("JPG/PNG Crop")
+        self.jpg_dropdown.addItem("JPG-to-PNG Converter")
         self.jpg_dropdown.addItem("JPG-to-PDF Converter")
         self.jpg_dropdown.currentIndexChanged.connect(self.jpg_on_dropdown_changed)
         
@@ -36,29 +37,30 @@ class Example(QMainWindow):
         self.jpg_stack = QStackedLayout()
         
         ##########################
-        # Stack 1: JPG-Resizer (Percentage)
-        # Create the jpg resize page
-        self.jpg_resize_page = QWidget()
-        jpg_resize_label1 = QLabel("Enter a number between 0 and 300: (Resize based on percentage)")
-        self.jpg_resize_label2 = QLabel("")
-        self.jpg_resize_label3 = QLabel("File selected")
-        jpg_resize_button1 = QPushButton("Select Image File")
-        jpg_resize_button1.clicked.connect(lambda: self.select_file(self.jpg_resize_label3, 1))
-        jpg_resize_button2 = QPushButton("Submit", self)
-        jpg_resize_button2.clicked.connect(lambda: self.jpg_resizer(self.jpg_resize_label2, 1))
+        # Stack: JPG-PNG-Resizer (Percentage)
+        # Create the jpg/png resize page
+        self.jpg_png_resize_page = QWidget()
+        jpg_png_resize_label1 = QLabel("Enter a number between 0 and 300: (Resize based on percentage)")
+        jpg_png_resize_label2 = QLabel("")
+        jpg_png_resize_label3 = QLabel("This is a JPG/PNG Resizer by Percentage. File selected:")
+        jpg_png_resize_button1 = QPushButton("Select Image File")
+        jpg_png_resize_button1.clicked.connect(lambda: self.select_file(jpg_png_resize_label3, 'file', 'Image File (*.jpg *.jpeg *.png)'))
+        jpg_png_resize_button2 = QPushButton("Submit", self)
+        jpg_png_resize_button2.clicked.connect(lambda: self.jpg_png_resizer(jpg_png_resize_label2, 1))
         self.jpg_resize_line_edit1 = QLineEdit()
+        
         self.jpg_resize_layout = QVBoxLayout()
-        self.jpg_resize_layout.addWidget(jpg_resize_button1)
-        self.jpg_resize_layout.addWidget(jpg_resize_label1)
+        self.jpg_resize_layout.addWidget(jpg_png_resize_button1)
+        self.jpg_resize_layout.addWidget(jpg_png_resize_label1)
         self.jpg_resize_layout.addWidget(self.jpg_resize_line_edit1)
-        self.jpg_resize_layout.addWidget(jpg_resize_button2)
-        self.jpg_resize_layout.addWidget(self.jpg_resize_label2)
-        self.jpg_resize_layout.addWidget(self.jpg_resize_label3)
+        self.jpg_resize_layout.addWidget(jpg_png_resize_button2)
+        self.jpg_resize_layout.addWidget(jpg_png_resize_label2)
+        self.jpg_resize_layout.addWidget(jpg_png_resize_label3)
         self.jpg_resize_layout.addStretch()
-        self.jpg_resize_page.setLayout(self.jpg_resize_layout)
+        self.jpg_png_resize_page.setLayout(self.jpg_resize_layout)
 
         ##########################
-        # Stack 2: JPG-Resizer 2 (Freedom) 
+        # Stack: JPG-Resizer 2 (Freedom) 
         # Create the JPG Resize page
         """
         # Create the jpg resize2 (freedom) page
@@ -71,13 +73,13 @@ class Example(QMainWindow):
         # self.jpg_resize2_line_edit1 = QLineEdit()
         # self.jpg_resize2_line_edit2 = QLineEdit()
         # self.jpg_resize2_checkbox1 = QCheckBox(self)
-        # self.jpg_resize2_checkbox1.stateChanged.connect(self.jpg_resizer)
+        # self.jpg_resize2_checkbox1.stateChanged.connect(self.jpg_png_resizer)
         # self.jpg_resize2_checkbox2 = QCheckBox(self)
-        # self.jpg_resize2_checkbox2.stateChanged.connect(self.jpg_resizer)
+        # self.jpg_resize2_checkbox2.stateChanged.connect(self.jpg_png_resizer)
         # jpg_resize2_label4 = QLabel("Do Not Enlarge")
         # jpg_resize2_button2 = QPushButton("Submit")
         # jpg_resize2_label5 = QLabel("")
-        # jpg_resize2_button2.clicked.connect(lambda: self.resize(jpg_resize2_label5, 2))
+        # jpg_resize2_button2.clicked.connect(lambda: self.resize(jpg_resize2_label5, 2, 'Image Files (*.jpg *.jpeg *.png')))
         # jpg_resize2_layout = QGridLayout()
         # jpg_resize2_layout.addWidget(jpg_resize2_button1, 0, 0)
         # jpg_resize2_layout.addWidget(jpg_resize2_label1, 1, 0)
@@ -93,24 +95,52 @@ class Example(QMainWindow):
         """
         
         ##########################
-        # Stack 3: JPG-Crop 
+        # Stack: JPG/PNG-Crop 
         # Create the JPG crop page
-        self.jpg_crop_page = QWidget()
-        self.jpg_crop_label1 = QLabel("This is JPG Crop")
-        self.jpg_crop_button1 = QPushButton("Button 2")
-        self.jpg_crop_layout = QVBoxLayout()
-        self.jpg_crop_layout.addWidget(self.jpg_crop_label1)
-        self.jpg_crop_layout.addWidget(self.jpg_crop_button1)
-        self.jpg_crop_page.setLayout(self.jpg_crop_layout)
-
+        self.jpg_png_crop_page = QWidget()
+        self.jpg_png_crop_label1 = QLabel("This is JPG/PNG Crop")
+        self.jpg_png_crop_button1 = QPushButton("Button 2")
+        self.jpg_png_crop_layout = QVBoxLayout()
+        
+        self.jpg_png_crop_layout.addWidget(self.jpg_png_crop_label1)
+        self.jpg_png_crop_layout.addWidget(self.jpg_png_crop_button1)
+        self.jpg_png_crop_page.setLayout(self.jpg_png_crop_layout)
+        
         ##########################
-        # Stack 4: JPG-to-PDF Converter
+        # Stack: JPG-to-PNG 
+        # Create the JPG to PNG page
+        self.jpg_png_page = QWidget()
+        jpg_png_label1 = QLabel("This is JPG to PNG converter", self) 
+        
+        # Initialize conversion mode and set the initial index
+        self.conversion_mode = "jpg-png" 
+        self.jpg_png_combo_box = QComboBox()
+        self.jpg_png_combo_box.addItems(["JPG-PNG", "PNG-JPG"]) 
+        self.jpg_png_combo_box.currentIndexChanged.connect(self.jpg_png_update_conversion_mode)
+        
+        jpg_png_button1 = QPushButton("Select Multiple Image Files", self)
+        jpg_png_button1.clicked.connect(lambda: self.jpg_png_select_file(jpg_png_label1))
+        jpg_png_button2 = QPushButton("Convert all")
+        jpg_png_button2.clicked.connect(lambda: self.jpg_png_convert(jpg_png_label1))
+        
+        self.jpg_png_layout = QVBoxLayout()
+        self.jpg_png_layout.addWidget(self.jpg_png_combo_box)
+        self.jpg_png_layout.addWidget(jpg_png_button1)
+        self.jpg_png_layout.addWidget(jpg_png_button2) 
+        self.jpg_png_layout.addWidget(jpg_png_label1)
+        self.jpg_png_layout.addStretch()
+        self.jpg_png_page.setLayout(self.jpg_png_layout)
+        
+        
+        
+        ##########################
+        # Stack: JPG-to-PDF Converter
         # Create the JPG to PDF Converter page
         self.jpg_to_pdf_page = QWidget()
         jpg_to_pdf_label1 = QLabel("This is Image to PDF Converter", self)
         self.jpg_to_pdf_label2 = QLabel("", self)
         jpg_to_pdf_button1 = QPushButton("Select Multiple Image Files", self)
-        jpg_to_pdf_button1.clicked.connect(lambda: self.select_file(jpg_to_pdf_label1, 2))
+        jpg_to_pdf_button1.clicked.connect(lambda: self.select_file(jpg_to_pdf_label1, 'files', 'Image Files (*.jpg *.jpeg *.png)'))
         jpg_to_pdf_button2 = QPushButton("Convert and Merge")
         jpg_to_pdf_button2.clicked.connect(lambda: self.jpg_to_pdf_convert(jpg_to_pdf_label1))
         
@@ -122,13 +152,14 @@ class Example(QMainWindow):
         self.jpg_to_pdf_layout.addStretch()
         self.jpg_to_pdf_page.setLayout(self.jpg_to_pdf_layout)
 
-        
+
         ####################################################
         # Summarize JPG Tab
         # Add the pages to the stack layouts
-        self.jpg_stack.addWidget(self.jpg_resize_page)
+        self.jpg_stack.addWidget(self.jpg_png_resize_page)
         # self.jpg_stack.addWidget(self.jpg_resize2_page)
-        self.jpg_stack.addWidget(self.jpg_crop_page)
+        self.jpg_stack.addWidget(self.jpg_png_crop_page)
+        self.jpg_stack.addWidget(self.jpg_png_page)
         self.jpg_stack.addWidget(self.jpg_to_pdf_page)
 
 ############################################################
@@ -151,7 +182,7 @@ class Example(QMainWindow):
         pdf_merge_label1 = QLabel("This is PDF Merger", self)
         self.pdf_merge_label2 = QLabel("", self)
         pdf_merge_button1 = QPushButton("Select Multiple PDF Files", self)
-        pdf_merge_button1.clicked.connect(lambda: self.select_file(pdf_merge_label1, 4))
+        pdf_merge_button1.clicked.connect(lambda: self.select_file(pdf_merge_label1, 'files', "PDF Files (*.pdf)"))
         pdf_merge_button2 = QPushButton("Merge PDF Files")
         pdf_merge_button2.clicked.connect(lambda: self.pdf_merge_convert(pdf_merge_label1))
         self.pdf_merge_layout = QVBoxLayout()
@@ -197,7 +228,7 @@ class Example(QMainWindow):
         subf_remove_label2 = QLabel("")
         self.subf_remove_label3 = QLabel("", self)
         subf_remove_button1= QPushButton("Select Folder")
-        subf_remove_button1.clicked.connect(lambda: self.select_file(subf_remove_label2, 5))
+        subf_remove_button1.clicked.connect(lambda: self.select_file(subf_remove_label2, 'folder'))
         subf_remove_button2= QPushButton("Subfolder remove")
         subf_remove_button2.clicked.connect(lambda: self.subfolder_remove())
         self.subf_remove_layout = QVBoxLayout()
@@ -252,61 +283,54 @@ class Example(QMainWindow):
     select file
     * Label to determine which label to change text
     @param
-        i - integer. To keep track of which button is calling. I'm too lazy to make multiple, will change if have issues.
+        ~~i - integer. To keep track of which button is calling. I'm too lazy to make multiple, will change if have issues.~~
+        i - file/folder, files/folders.
     """
-    def select_file(self, label, i):
+    def select_file(self, label, i, type=None):
         self.list_of_file_paths = []
-        # options = QFileDialog.Option()
-        match(i):
-            case 1:
-                # Select 1 Image File 
-                options = QFileDialog.Option()
-                file_path, _ = QFileDialog.getOpenFileName(self, "Select Files", "", "Image Files (*.jpg *.jpeg *.png)", options=options)
-                if file_path: 
-                    self.list_of_file_paths.append(str(file_path))
-                    label.setText(f"Selected: {file_path}")
-            case 2:
-                # Select Multiple Image Files
-                really_long_string = ''
-                options = QFileDialog.Option()
-                file_paths, _ = QFileDialog.getOpenFileNames(self, "Select Files", "", "Image Files (*.jpg *.jpeg *.png)", options=options)
-                if file_paths:
-                    for file_path in file_paths:
-                        file_path = str(file_path)
-                        self.list_of_file_paths.append(file_path)
-                        really_long_string += file_path + '\n'
-                    label.setText(really_long_string)
-            case 3:
-                # Select 1 PDF File 
-                options = QFileDialog.Option()
-                file_path, _ = QFileDialog.getOpenFileName(self, "Select Files", "", "PDF Files (*.pdf)", options=options)
-                if file_path: 
-                    self.list_of_file_paths.append(str(file_path))
-                    label.setText(f"Selected: {file_path}")
-            case 4:
-                # Select Multiple PDF files
-                really_long_string = ''
-                options = QFileDialog.Option()
-                file_paths, _ = QFileDialog.getOpenFileNames(self, "Select Files", "", "PDF Files (*.pdf)", options=options)
-                if file_paths:
-                    for file_path in file_paths:
-                        file_path = str(file_path)
-                        self.list_of_file_paths.append(file_path)
-                        really_long_string += file_path + '\n'
-                    label.setText(really_long_string)
-            case 5: 
-                # Select 1 Folder 
-                file_path = QFileDialog.getExistingDirectory(self, "Select Folder", "")
-                if file_path: 
-                    self.list_of_file_paths.append(str(file_path))
-                    label.setText(f"Selected: {file_path}")
+        options = QFileDialog.Option()
+        
+        if i == 'file':
+            # Select 1 File  
+            file_path, _ = QFileDialog.getOpenFileName(self, "Select File", "", type, options=options)
+            if file_path: 
+                self.list_of_file_paths.append(str(file_path))
+                label.setText(f"Selected: {file_path}")
+        
+        if i == 'files':
+            # Select Multiple Files
+            really_long_string = '' 
+            file_paths, _ = QFileDialog.getOpenFileNames(self, "Select Files", "", type, options=options)
+            if file_paths:
+                for file_path in file_paths:
+                    file_path = str(file_path)
+                    self.list_of_file_paths.append(file_path)
+                    really_long_string += file_path + '\n'
+                label.setText(really_long_string)
+                
+        if i == 'folder': 
+            # Select 1 Folder 
+            file_path = QFileDialog.getExistingDirectory(self, "Select Folder", "")
+            if file_path: 
+                self.list_of_file_paths.append(str(file_path))
+                label.setText(f"Selected: {file_path}")
+        
+        if i == 'folders': 
+            # Select 1 Folder 
+            file_paths = QFileDialog.getExistingDirectory(self, "Select Folders", "")
+            if file_paths:
+                for file_path in file_paths:
+                    file_path = str(file_path)
+                    self.list_of_file_paths.append(file_path)
+                    really_long_string += file_path + '\n'
+                label.setText(really_long_string) 
 
 
 
     """
     jpg resizer (ONLY SUPPORT 1 FILE FOR NOW)
     """
-    def jpg_resizer(self, label, i):
+    def jpg_png_resizer(self, label, i):
         user_input = self.jpg_resize_line_edit1.text()
         match(i):
             case 1:
@@ -387,10 +411,63 @@ class Example(QMainWindow):
                         pass
                     return          
 
+    """
+    Change jpg to png convert 
+    """
+    def jpg_png_update_conversion_mode(self, index):
+        conversion_modes = ["jpg-png", "png-jpg"]
+        self.conversion_mode = conversion_modes[index]
+    
+    def jpg_png_select_file(self, label):
+        self.list_of_file_paths = []
+        options = QFileDialog.Option()
+        
+        index = self.jpg_png_combo_box.currentIndex()
+        conversion_mode = ["jpg-png", "png-jpg"][index]
+        
+        if self.conversion_mode == "jpg-png":
+            filter = 'Image Files (*.jpg *.jpeg)'
+        elif self.conversion_mode == "png-jpg":
+            filter = 'Image Files (*.png)'
+            
+        really_long_string = '' 
+        file_paths, _ = QFileDialog.getOpenFileNames(self, "Select Files", "", filter, options=options)
+        if file_paths:
+            for file_path in file_paths:
+                file_path = str(file_path)
+                self.list_of_file_paths.append(file_path)
+                really_long_string += file_path + '\n'
+            label.setText(really_long_string)
+        
+    def jpg_png_convert(self, label):
+        # Check if theres convertible files in list
+        if len(self.list_of_file_paths) == 0:
+            label.setText("Please select an image file first.")
+        else:
+            index = self.jpg_png_combo_box.currentIndex()
+            conversion_mode = ["jpg-png", "png-jpg"][index]
+            
+            dir = os.path.dirname(self.list_of_file_paths[0])
+            
+            
+            for file in self.list_of_file_paths:
+                image = Image.open(file)
+                
+                if conversion_mode=="jpg-png":
+                    path = os.path.join(dir, os.path.basename(file).replace('jpg', 'png'))
+                if conversion_mode=="png-jpg":
+                    image = image.convert('RGB')
+                    path = os.path.join(dir, os.path.basename(file).replace('png', 'jpg'))
+                
+                image.save(path)
+                image.close()
+            
+            label.setText("Sucessfully converted all JPG to PNG")
+
 
     """
     Change jpg to pdf convert 
-    """
+    """     
     def jpg_to_pdf_convert(self, label):
         # Check if theres convertible files in list
         if len(self.list_of_file_paths) == 0:
@@ -398,7 +475,6 @@ class Example(QMainWindow):
         else:
             # Creates a dialog to ask for new file name to be saved as pdf
             options = QFileDialog.Options()
-            # options |= QFileDialog.DontUseNativeDialog
             file_name, _ = QFileDialog.getSaveFileName(self, "Save File", "", "PDF (*.pdf)", options=options)
 
             # Actual conversion
@@ -426,7 +502,7 @@ class Example(QMainWindow):
                 image1.save(file_name, save_all=True, append_images=image_list)
                 self.jpg_to_pdf_label2.setText("Convert complete")
             except ValueError as e:
-                pass
+                self.jpg_to_pdf_label2.setText(f"Error: {e}")
     
     
 
@@ -479,11 +555,6 @@ class Example(QMainWindow):
 
         # List of all directories within the main folder
         subdirectories = [entry for entry in os.listdir(main_folder) if os.path.isdir(os.path.join(main_folder, entry))]
-        
-        # Check if subfolders exist
-        # if not subdirectories:
-        #     self.subf_remove_label3.setText("This folder does not have subfolder to be extracted and removed.")
-        #     return
         
         # Continue extract if subfolders exist
         for subdirectory in subdirectories:
