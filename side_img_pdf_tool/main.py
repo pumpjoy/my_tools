@@ -2,7 +2,8 @@
 import sys
 import os
 import shutil
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QCheckBox, QGridLayout, QComboBox, QLabel, QPushButton, QStackedLayout, QFileDialog, QLabel, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy, QComboBox, QLabel, QPushButton, QStackedLayout, QFileDialog, QLabel, QLineEdit
+from PyQt5.QtGui import QPixmap, QImage, QColor
 from PyQt5.QtCore import Qt
 from PIL import Image
 from PyPDF2 import PdfWriter
@@ -11,7 +12,7 @@ class Example(QMainWindow):
     def __init__(self):
         super().__init__()
         self.resize(800,800)
-        self.setWindowTitle("Tools 0.4")
+        self.setWindowTitle("Tools 0.5")
 
         # Create the tabs and set up the layout
         self.tabs = QTabWidget()
@@ -29,6 +30,7 @@ class Example(QMainWindow):
         self.jpg_dropdown = QComboBox()
         self.jpg_dropdown.addItem("JPG/PNG Resize (Percentage)")
         self.jpg_dropdown.addItem("JPG/PNG Crop")
+        self.jpg_dropdown.addItem("JPG Colour Picker")
         self.jpg_dropdown.addItem("JPG-to-PNG Converter")
         self.jpg_dropdown.addItem("JPG-to-PDF Converter")
         self.jpg_dropdown.currentIndexChanged.connect(self.jpg_on_dropdown_changed)
@@ -100,11 +102,54 @@ class Example(QMainWindow):
         self.jpg_png_crop_page = QWidget()
         self.jpg_png_crop_label1 = QLabel("This is JPG/PNG Crop")
         self.jpg_png_crop_button1 = QPushButton("Button 2")
-        self.jpg_png_crop_layout = QVBoxLayout()
         
-        self.jpg_png_crop_layout.addWidget(self.jpg_png_crop_label1)
+        self.jpg_png_crop_layout = QVBoxLayout()
         self.jpg_png_crop_layout.addWidget(self.jpg_png_crop_button1)
+        self.jpg_png_crop_layout.addWidget(self.jpg_png_crop_label1)
+        self.jpg_png_crop_layout.addStretch()
         self.jpg_png_crop_page.setLayout(self.jpg_png_crop_layout)
+        
+        ##########################
+        # Stack: JPG Colour Picker
+        # Colour picker that displays HEX, RGB, HSV values
+        # TODO Colour Picker: Add pixel enhancer circle (like that one in website)
+        # TODO Colour Picker: Add image size changer
+        self.jpg_colour_picker_page = QWidget()
+        jpg_colour_picker_label1 = QLabel("This is a colour picker. Select Image file, will display HEX, RGB and HSV values")
+    
+        
+        jpg_colour_picker_label2 = QLabel("")
+        self.jpg_colour_picker_label_hex = QLabel("HEX: ")
+        self.jpg_colour_picker_label_hex.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.jpg_colour_picker_label_rgb = QLabel("RGB: ")
+        self.jpg_colour_picker_label_rgb.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.jpg_colour_picker_label_hsv = QLabel("HSV: ")
+        self.jpg_colour_picker_label_hsv.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        
+        jpg_colour_picker_button1 = QPushButton("Select Image File", self)
+        jpg_colour_picker_button1.clicked.connect(lambda: self.jpg_colour_picker_select_file(jpg_colour_picker_label2))
+    
+        self.jpg_colour_picker_image_label = QLabel() 
+    
+        self.jpg_colour_picker_misc_layout = QVBoxLayout() 
+        self.jpg_colour_picker_misc_layout.addWidget(jpg_colour_picker_button1)
+        self.jpg_colour_picker_misc_layout.addWidget(jpg_colour_picker_label1)
+        self.jpg_colour_picker_misc_layout.addWidget(jpg_colour_picker_label2)
+        self.jpg_colour_picker_misc_layout.addWidget(self.jpg_colour_picker_label_hex)
+        self.jpg_colour_picker_misc_layout.addWidget(self.jpg_colour_picker_label_rgb)
+        self.jpg_colour_picker_misc_layout.addWidget(self.jpg_colour_picker_label_hsv) 
+        
+        self.jpg_colour_picker_image_layout = QHBoxLayout()
+        self.jpg_colour_picker_image_layout.addWidget(self.jpg_colour_picker_image_label)
+        
+        jpg_colour_picker_main_layout = QVBoxLayout()
+        jpg_colour_picker_main_layout.addLayout(self.jpg_colour_picker_misc_layout)
+        jpg_colour_picker_main_layout.addLayout(self.jpg_colour_picker_image_layout)
+        jpg_colour_picker_main_layout.addStretch()
+        
+        self.jpg_colour_picker_page.setLayout(jpg_colour_picker_main_layout)
+        
+        
         
         ##########################
         # Stack: JPG-to-PNG 
@@ -132,7 +177,6 @@ class Example(QMainWindow):
         self.jpg_png_page.setLayout(self.jpg_png_layout)
         
         
-        
         ##########################
         # Stack: JPG-to-PDF Converter
         # Create the JPG to PDF Converter page
@@ -151,14 +195,16 @@ class Example(QMainWindow):
         self.jpg_to_pdf_layout.addWidget(jpg_to_pdf_label1)
         self.jpg_to_pdf_layout.addStretch()
         self.jpg_to_pdf_page.setLayout(self.jpg_to_pdf_layout)
-
-
+        
+        
+        
         ####################################################
         # Summarize JPG Tab
         # Add the pages to the stack layouts
         self.jpg_stack.addWidget(self.jpg_png_resize_page)
         # self.jpg_stack.addWidget(self.jpg_resize2_page)
         self.jpg_stack.addWidget(self.jpg_png_crop_page)
+        self.jpg_stack.addWidget(self.jpg_colour_picker_page)
         self.jpg_stack.addWidget(self.jpg_png_page)
         self.jpg_stack.addWidget(self.jpg_to_pdf_page)
 
@@ -202,6 +248,7 @@ class Example(QMainWindow):
         self.pdf_split_layout = QVBoxLayout()
         self.pdf_split_layout.addWidget(self.pdf_split_label)
         self.pdf_split_layout.addWidget(self.pdf_split_button)
+        self.pdf_split_layout.addStretch()
         self.pdf_split_page.setLayout(self.pdf_split_layout)
 
         ####################################################
@@ -410,6 +457,62 @@ class Example(QMainWindow):
                     except ValueError as e:
                         pass
                     return          
+
+
+    
+    """
+    Colour picker
+    """
+    def jpg_colour_picker_select_file(self, label):
+        self.list_of_file_paths = []
+        options = QFileDialog.Option()
+        
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select File", "", 'Image Files (*.jpg *.jpeg *.png)', options=options)
+        if file_path: 
+            self.list_of_file_paths.append(str(file_path))
+            label.setText(f"Selected: {file_path}")
+            self.qimage = QImage(file_path)
+            self.pixmap = QPixmap.fromImage(self.qimage)
+            # Scale down the picture 
+            self.scale_and_display_image()
+            self.jpg_colour_picker_image_label.mousePressEvent = self.get_pixel_colour
+            
+    def scale_and_display_image(self):
+        # Scale down the picture to only be
+        im_width = 800 
+        im_height = 600
+
+        scaled_pixmap = self.pixmap.scaled(
+            im_width, im_height, Qt.KeepAspectRatio, Qt.SmoothTransformation
+        )
+        
+        # Set the pixmap to the QLabel
+        self.jpg_colour_picker_image_label.setPixmap(scaled_pixmap)
+    
+ 
+    def get_pixel_colour(self, event):
+        displayed_size = self.jpg_colour_picker_image_label.pixmap().size()
+        original_size = self.qimage.size()
+        
+        x = event.pos().x()
+        y = event.pos().y()
+        
+        scale_x = original_size.width() / displayed_size.width()
+        scale_y = original_size.height() / displayed_size.height()
+
+        mapped_x = int(x * scale_x)
+        mapped_y = int(y * scale_y)
+
+        if 0 <= mapped_x < original_size.width() and 0 <= mapped_y < original_size.height():
+            colour = QColor(self.qimage.pixel(mapped_x, mapped_y))
+            r, g, b, a = colour.red(), colour.green(), colour.blue(), colour.alpha()
+            h, s, v, _ = colour.getHsv()
+            hex_code = colour.name(QColor.HexArgb)
+            
+            self.jpg_colour_picker_label_hex.setText(f"HEX: {hex_code}")
+            self.jpg_colour_picker_label_rgb.setText(f"RGB: ({r}, {g}, {b})")
+            self.jpg_colour_picker_label_hsv.setText(f"HSV: ({h}, {s}, {v})")
+
 
     """
     Change jpg to png convert 
